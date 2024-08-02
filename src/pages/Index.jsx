@@ -1,12 +1,22 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import { useState } from 'react';
+import FileUpload from '../components/FileUpload';
+import Dashboard from '../components/Dashboard';
 
 const Index = () => {
+  const [keyfileContent, setKeyfileContent] = useState(null);
+
+  const handleFileUpload = (content) => {
+    setKeyfileContent(content);
+  };
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold mb-4">Welcome to Your Blank App</h1>
-        <p className="text-xl text-gray-600">Start building your amazing project here!</p>
-      </div>
+    <div className="min-h-screen p-8 bg-gray-100">
+      <h1 className="text-4xl font-bold mb-8 text-center">Firestore User Credits Dashboard</h1>
+      {!keyfileContent ? (
+        <FileUpload onFileUpload={handleFileUpload} />
+      ) : (
+        <Dashboard keyfileContent={keyfileContent} />
+      )}
     </div>
   );
 };
