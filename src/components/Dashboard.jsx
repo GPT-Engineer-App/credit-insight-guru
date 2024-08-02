@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { initializeApp } from 'firebase/app';
 import { getFirestore, collection, getDocs } from 'firebase/firestore';
-import { getAuth, signInWithCustomToken } from 'firebase/auth';
+import { getAuth, signInWithEmailAndPassword } from 'firebase/auth';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
@@ -11,12 +11,18 @@ const Dashboard = ({ keyfileContent }) => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const app = initializeApp({
+        const firebaseConfig = {
+          apiKey: keyfileContent.api_key,
+          authDomain: `${keyfileContent.project_id}.firebaseapp.com`,
           projectId: keyfileContent.project_id,
-        });
+        };
 
+        const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
-        await signInWithCustomToken(auth, keyfileContent.private_key);
+        
+        // Use a default email and password for authentication
+        // In a real-world scenario, you'd want to use a more secure method
+        await signInWithEmailAndPassword(auth, 'admin@example.com', 'password');
 
         const db = getFirestore(app);
         const usersRef = collection(db, 'users');
