@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { initializeApp } from 'firebase/app';
 import { getFirestore, collection, getDocs } from 'firebase/firestore';
+import { getAuth, signInWithCustomToken } from 'firebase/auth';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
@@ -11,12 +12,11 @@ const Dashboard = ({ keyfileContent }) => {
     const fetchData = async () => {
       try {
         const app = initializeApp({
-          credential: {
-            projectId: keyfileContent.project_id,
-            clientEmail: keyfileContent.client_email,
-            privateKey: keyfileContent.private_key,
-          },
+          projectId: keyfileContent.project_id,
         });
+
+        const auth = getAuth(app);
+        await signInWithCustomToken(auth, keyfileContent.private_key);
 
         const db = getFirestore(app);
         const usersRef = collection(db, 'users');
@@ -50,6 +50,7 @@ const Dashboard = ({ keyfileContent }) => {
         });
       } catch (error) {
         console.error('Error fetching data:', error);
+        setStats({ error: error.message });
       }
     };
 
@@ -58,6 +59,10 @@ const Dashboard = ({ keyfileContent }) => {
 
   if (!stats) {
     return <div className="text-center mt-8">Loading...</div>;
+  }
+
+  if (stats.error) {
+    return <div className="text-center mt-8 text-red-500">Error: {stats.error}</div>;
   }
 
   return (
