@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import FileUpload from '../components/FileUpload';
-import dynamic from 'next/dynamic';
-const Dashboard = dynamic(() => import('../components/Dashboard'), { ssr: false });
+import Dashboard from '../components/Dashboard';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
