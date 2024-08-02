@@ -18,16 +18,14 @@ const Dashboard = ({ keyfileContent }) => {
         }
 
         const firebaseConfig = {
+          apiKey: keyfileContent.api_key,
           projectId: keyfileContent.project_id,
-          privateKey: keyfileContent.private_key,
-          clientEmail: keyfileContent.client_email,
+          appId: keyfileContent.app_id,
         };
 
         let app;
         if (getApps().length === 0) {
-          app = initializeApp({
-            projectId: firebaseConfig.projectId,
-          });
+          app = initializeApp(firebaseConfig);
         } else {
           app = getApp();
         }
@@ -36,11 +34,13 @@ const Dashboard = ({ keyfileContent }) => {
         
         // Initialize Auth with the service account credentials
         const auth = getAuth(app);
-        // Note: You'll need to implement a server-side function to create a custom token
-        // For now, we'll comment out this line as it's not possible to create a custom token client-side
-        // await signInWithCustomToken(auth, await createCustomToken('admin'));
-        const usersRef = collection(db, 'users');
-        const snapshot = await getDocs(usersRef);
+        
+        try {
+          const usersRef = collection(db, 'users');
+          const snapshot = await getDocs(usersRef);
+        } catch (firebaseError) {
+          throw new Error(`Firebase error: ${firebaseError.message}`);
+        }
 
         const credits = snapshot.docs.map(doc => doc.data().daily_credits || 0);
         const totalUsers = credits.length;

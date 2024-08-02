@@ -26,7 +26,7 @@ const Index = () => {
   }, []);
 
   const isValidKeyfile = (content) => {
-    return content && content.project_id && content.private_key && content.client_email;
+    return content && content.project_id && content.api_key && content.app_id;
   };
 
   const handleFileUpload = (content) => {
