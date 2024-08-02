@@ -26,7 +26,8 @@ const Index = () => {
   }, []);
 
   const isValidKeyfile = (content) => {
-    return content && content.project_id && content.api_key && content.app_id;
+    const requiredFields = ['type', 'project_id', 'private_key_id', 'private_key', 'client_email', 'client_id', 'auth_uri', 'token_uri', 'auth_provider_x509_cert_url', 'client_x509_cert_url'];
+    return requiredFields.every(field => content && content[field]);
   };
 
   const handleFileUpload = (content) => {
@@ -35,7 +36,9 @@ const Index = () => {
       localStorage.setItem('keyfileContent', JSON.stringify(content));
       setError(null);
     } else {
-      setError('Invalid keyfile format. Please check your file and try again.');
+      const missingFields = ['type', 'project_id', 'private_key_id', 'private_key', 'client_email', 'client_id', 'auth_uri', 'token_uri', 'auth_provider_x509_cert_url', 'client_x509_cert_url']
+        .filter(field => !content[field]);
+      setError(`Invalid keyfile format. Missing fields: ${missingFields.join(', ')}. Please check your file and try again.`);
     }
   };
 
