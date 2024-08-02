@@ -4,13 +4,19 @@ import { getFirestore, collection, getDocs } from 'firebase/firestore';
 import { getAuth, signInWithEmailAndPassword } from 'firebase/auth';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 const Dashboard = ({ keyfileContent }) => {
   const [stats, setStats] = useState(null);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
+        if (!keyfileContent || !keyfileContent.api_key || !keyfileContent.project_id) {
+          throw new Error('Invalid keyfile content. Please check your keyfile and try again.');
+        }
+
         const firebaseConfig = {
           apiKey: keyfileContent.api_key,
           authDomain: `${keyfileContent.project_id}.firebaseapp.com`,
@@ -31,9 +37,9 @@ const Dashboard = ({ keyfileContent }) => {
         const credits = snapshot.docs.map(doc => doc.data().daily_credits || 0);
         const totalUsers = credits.length;
         const totalCredits = credits.reduce((sum, credit) => sum + credit, 0);
-        const averageCredits = totalCredits / totalUsers;
-        const maxCredits = Math.max(...credits);
-        const minCredits = Math.min(...credits);
+        const averageCredits = totalCredits / totalUsers || 0;
+        const maxCredits = Math.max(...credits, 0);
+        const minCredits = Math.min(...credits, 0);
 
         const distribution = credits.reduce((acc, credit) => {
           const range = Math.floor(credit / 100) * 100;
@@ -54,21 +60,28 @@ const Dashboard = ({ keyfileContent }) => {
           minCredits,
           chartData,
         });
+        setError(null);
       } catch (error) {
         console.error('Error fetching data:', error);
-        setStats({ error: error.message });
+        setError(error.message);
+        setStats(null);
       }
     };
 
     fetchData();
   }, [keyfileContent]);
 
-  if (!stats) {
-    return <div className="text-center mt-8">Loading...</div>;
+  if (error) {
+    return (
+      <Alert variant="destructive" className="mt-8">
+        <AlertTitle>Error</AlertTitle>
+        <AlertDescription>{error}</AlertDescription>
+      </Alert>
+    );
   }
 
-  if (stats.error) {
-    return <div className="text-center mt-8 text-red-500">Error: {stats.error}</div>;
+  if (!stats) {
+    return <div className="text-center mt-8">Loading...</div>;
   }
 
   return (
