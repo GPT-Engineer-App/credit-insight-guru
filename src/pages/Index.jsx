@@ -1,51 +1,72 @@
 import { useState, useEffect } from 'react';
-import FileUpload from '../components/FileUpload';
 import Dashboard from '../components/Dashboard';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
 const Index = () => {
-  const [keyfileContent, setKeyfileContent] = useState(null);
+  const [firebaseConfig, setFirebaseConfig] = useState(null);
   const [error, setError] = useState(null);
+  const [formData, setFormData] = useState({
+    apiKey: '',
+    authDomain: '',
+    projectId: '',
+    storageBucket: '',
+    messagingSenderId: '',
+    appId: '',
+  });
 
   useEffect(() => {
-    const savedKeyfile = localStorage.getItem('keyfileContent');
-    if (savedKeyfile) {
+    const savedConfig = localStorage.getItem('firebaseConfig');
+    if (savedConfig) {
       try {
-        const parsedKeyfile = JSON.parse(savedKeyfile);
-        if (isValidKeyfile(parsedKeyfile)) {
-          setKeyfileContent(parsedKeyfile);
+        const parsedConfig = JSON.parse(savedConfig);
+        if (isValidFirebaseConfig(parsedConfig)) {
+          setFirebaseConfig(parsedConfig);
+          setFormData(parsedConfig);
         } else {
-          throw new Error('Invalid keyfile format');
+          throw new Error('Invalid Firebase configuration');
         }
       } catch (err) {
-        setError('Saved keyfile is invalid. Please upload a new one.');
-        localStorage.removeItem('keyfileContent');
+        setError('Saved configuration is invalid. Please enter a new one.');
+        localStorage.removeItem('firebaseConfig');
       }
     }
   }, []);
 
-  const isValidKeyfile = (content) => {
-    const requiredFields = ['type', 'project_id', 'private_key_id', 'private_key', 'client_email', 'client_id', 'auth_uri', 'token_uri', 'auth_provider_x509_cert_url', 'client_x509_cert_url'];
-    return requiredFields.every(field => content && content[field]);
+  const isValidFirebaseConfig = (config) => {
+    const requiredFields = ['apiKey', 'authDomain', 'projectId', 'storageBucket', 'messagingSenderId', 'appId'];
+    return requiredFields.every(field => config && config[field]);
   };
 
-  const handleFileUpload = (content) => {
-    if (isValidKeyfile(content)) {
-      setKeyfileContent(content);
-      localStorage.setItem('keyfileContent', JSON.stringify(content));
+  const handleInputChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (isValidFirebaseConfig(formData)) {
+      setFirebaseConfig(formData);
+      localStorage.setItem('firebaseConfig', JSON.stringify(formData));
       setError(null);
     } else {
-      const missingFields = ['type', 'project_id', 'private_key_id', 'private_key', 'client_email', 'client_id', 'auth_uri', 'token_uri', 'auth_provider_x509_cert_url', 'client_x509_cert_url']
-        .filter(field => !content[field]);
-      setError(`Invalid keyfile format. Missing fields: ${missingFields.join(', ')}. Please check your file and try again.`);
+      setError('Invalid Firebase configuration. Please fill in all fields.');
     }
   };
 
-  const handleClearKeyfile = () => {
-    setKeyfileContent(null);
+  const handleClearConfig = () => {
+    setFirebaseConfig(null);
+    setFormData({
+      apiKey: '',
+      authDomain: '',
+      projectId: '',
+      storageBucket: '',
+      messagingSenderId: '',
+      appId: '',
+    });
     setError(null);
-    localStorage.removeItem('keyfileContent');
+    localStorage.removeItem('firebaseConfig');
   };
 
   return (
@@ -57,14 +78,29 @@ const Index = () => {
           <AlertDescription>{error}</AlertDescription>
         </Alert>
       )}
-      {!keyfileContent ? (
-        <FileUpload onFileUpload={handleFileUpload} />
+      {!firebaseConfig ? (
+        <form onSubmit={handleSubmit} className="space-y-4 max-w-md mx-auto">
+          {Object.keys(formData).map((key) => (
+            <div key={key}>
+              <Label htmlFor={key}>{key}</Label>
+              <Input
+                type="text"
+                id={key}
+                name={key}
+                value={formData[key]}
+                onChange={handleInputChange}
+                required
+              />
+            </div>
+          ))}
+          <Button type="submit" className="w-full">Submit Firebase Configuration</Button>
+        </form>
       ) : (
         <>
-          <Dashboard keyfileContent={keyfileContent} />
+          <Dashboard firebaseConfig={firebaseConfig} />
           <div className="mt-8 text-center">
-            <Button onClick={handleClearKeyfile} variant="destructive">
-              Clear Keyfile
+            <Button onClick={handleClearConfig} variant="destructive">
+              Clear Firebase Configuration
             </Button>
           </div>
         </>

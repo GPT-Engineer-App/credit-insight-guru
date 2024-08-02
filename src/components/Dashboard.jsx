@@ -1,40 +1,27 @@
 import { useState, useEffect } from 'react';
-import { initializeApp, getApps, cert } from 'firebase-admin/app';
-import { getFirestore } from 'firebase-admin/firestore';
+import { initializeApp } from 'firebase/app';
+import { getFirestore, collection, getDocs } from 'firebase/firestore';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
-const Dashboard = ({ keyfileContent }) => {
+const Dashboard = ({ firebaseConfig }) => {
   const [stats, setStats] = useState(null);
   const [error, setError] = useState(null);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        if (!keyfileContent || !keyfileContent.project_id || !keyfileContent.private_key || !keyfileContent.client_email) {
-          throw new Error('Invalid keyfile content. Please check your keyfile and try again.');
+        if (!firebaseConfig) {
+          throw new Error('Invalid Firebase configuration. Please check your configuration and try again.');
         }
 
-        let app;
-        if (getApps().length === 0) {
-          app = initializeApp({
-            credential: cert(keyfileContent),
-            projectId: keyfileContent.project_id,
-          });
-        } else {
-          app = getApp();
-        }
-        
+        const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         
-        try {
-          const usersRef = db.collection('users');
-          const snapshot = await usersRef.get();
-        } catch (firebaseError) {
-          throw new Error(`Firebase error: ${firebaseError.message}`);
-        }
-
+        const usersRef = collection(db, 'users');
+        const snapshot = await getDocs(usersRef);
+        
         const credits = snapshot.docs.map(doc => doc.data().daily_credits || 0);
         const totalUsers = credits.length;
         const totalCredits = credits.reduce((sum, credit) => sum + credit, 0);
