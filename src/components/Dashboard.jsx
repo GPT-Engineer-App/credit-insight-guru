@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
-import { initializeApp } from 'firebase/app';
+import { initializeApp, getApps, getApp } from 'firebase/app';
 import { getFirestore, collection, getDocs } from 'firebase/firestore';
-import { getAuth, signInWithEmailAndPassword } from 'firebase/auth';
+import { getAuth, signInWithCustomToken } from 'firebase/auth';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -23,15 +23,22 @@ const Dashboard = ({ keyfileContent }) => {
           clientEmail: keyfileContent.client_email,
         };
 
-        const app = initializeApp({
-          projectId: firebaseConfig.projectId,
-        });
+        let app;
+        if (getApps().length === 0) {
+          app = initializeApp({
+            projectId: firebaseConfig.projectId,
+          });
+        } else {
+          app = getApp();
+        }
         
         const db = getFirestore(app);
         
         // Initialize Auth with the service account credentials
         const auth = getAuth(app);
-        await auth.signInWithCustomToken(await auth.createCustomToken('admin'));
+        // Note: You'll need to implement a server-side function to create a custom token
+        // For now, we'll comment out this line as it's not possible to create a custom token client-side
+        // await signInWithCustomToken(auth, await createCustomToken('admin'));
         const usersRef = collection(db, 'users');
         const snapshot = await getDocs(usersRef);
 
