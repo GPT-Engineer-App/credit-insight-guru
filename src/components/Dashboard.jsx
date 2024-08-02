@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
-import { initializeApp, getApps, getApp } from 'firebase/app';
-import { getFirestore, collection, getDocs } from 'firebase/firestore';
-import { getAuth, signInWithCustomToken } from 'firebase/auth';
+import { initializeApp, getApps, cert } from 'firebase-admin/app';
+import { getFirestore } from 'firebase-admin/firestore';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -17,27 +16,21 @@ const Dashboard = ({ keyfileContent }) => {
           throw new Error('Invalid keyfile content. Please check your keyfile and try again.');
         }
 
-        const firebaseConfig = {
-          apiKey: keyfileContent.api_key,
-          projectId: keyfileContent.project_id,
-          appId: keyfileContent.app_id,
-        };
-
         let app;
         if (getApps().length === 0) {
-          app = initializeApp(firebaseConfig);
+          app = initializeApp({
+            credential: cert(keyfileContent),
+            projectId: keyfileContent.project_id,
+          });
         } else {
           app = getApp();
         }
         
         const db = getFirestore(app);
         
-        // Initialize Auth with the service account credentials
-        const auth = getAuth(app);
-        
         try {
-          const usersRef = collection(db, 'users');
-          const snapshot = await getDocs(usersRef);
+          const usersRef = db.collection('users');
+          const snapshot = await usersRef.get();
         } catch (firebaseError) {
           throw new Error(`Firebase error: ${firebaseError.message}`);
         }
