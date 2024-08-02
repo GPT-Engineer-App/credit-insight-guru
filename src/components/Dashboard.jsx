@@ -13,24 +13,25 @@ const Dashboard = ({ keyfileContent }) => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        if (!keyfileContent || !keyfileContent.api_key || !keyfileContent.project_id) {
+        if (!keyfileContent || !keyfileContent.project_id || !keyfileContent.private_key || !keyfileContent.client_email) {
           throw new Error('Invalid keyfile content. Please check your keyfile and try again.');
         }
 
         const firebaseConfig = {
-          apiKey: keyfileContent.api_key,
-          authDomain: `${keyfileContent.project_id}.firebaseapp.com`,
           projectId: keyfileContent.project_id,
+          privateKey: keyfileContent.private_key,
+          clientEmail: keyfileContent.client_email,
         };
 
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
+        const app = initializeApp({
+          projectId: firebaseConfig.projectId,
+        });
         
-        // Use a default email and password for authentication
-        // In a real-world scenario, you'd want to use a more secure method
-        await signInWithEmailAndPassword(auth, 'admin@example.com', 'password');
-
         const db = getFirestore(app);
+        
+        // Initialize Auth with the service account credentials
+        const auth = getAuth(app);
+        await auth.signInWithCustomToken(await auth.createCustomToken('admin'));
         const usersRef = collection(db, 'users');
         const snapshot = await getDocs(usersRef);
 
